@@ -1,0 +1,17 @@
+development:
+  bittrex:
+    key: ""
+    secret: ""
+  honeybadger:
+    api_key: ""
+    report_data: true
+  history:
+    redis:
+      database: "redis://127.0.0.1:6379/1"
+      driver: "hiredis"
+      namespace: "history"
+  sidekiq:
+    redis:
+      database: "redis://127.0.0.1:6379/0"
+      driver: "hiredis"
+      namespace: "sidekiq"
