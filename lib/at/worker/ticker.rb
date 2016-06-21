@@ -43,7 +43,7 @@ module At
           end
         end
 
-        At::Worker::History.perform_in 10.seconds, current_time_key
+        At::Worker::Archiver.perform_in 10.seconds, current_time_key
       end
     end
   end

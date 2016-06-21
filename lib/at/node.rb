@@ -9,6 +9,7 @@ module At
 
     eager_autoload do
       autoload :Point
+      autoload :Prognose
     end
   end
 end

@@ -8,7 +8,6 @@ module At
       property :timestamp, type: Integer
       validates :timestamp, presence: true
 
-
       property :high, type: BigDecimal
       validates :high, presence: true
       property :low, type: BigDecimal
@@ -22,6 +21,8 @@ module At
 
       has_one :out, :to, unique: true, rel_class: "At::Relation::Line", model_class: "At::Node::Point"
       has_one :in, :from, unique: true, rel_class: "At::Relation::Line", model_class: "At::Node::Point"
+
+      has_one :out, :prognose, unique: true, model_class: "At::Node::Prognose", type: :guess
 
       def to_line
         rel(dir: :outgoing, type: :line)

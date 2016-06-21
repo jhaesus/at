@@ -5,6 +5,7 @@ module At
     autoload :Node
     autoload :Relation
     autoload :Worker
+    autoload :History
   end
 
   def self.env

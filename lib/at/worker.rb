@@ -12,20 +12,12 @@ module At
 
     eager_autoload do
       autoload :Ticker
-      autoload :History
-      autoload :Matcher
+      autoload :Archiver
+      autoload :Predictor
     end
 
     def round value
       value.round(3)
-    end
-
-    def db_key timestamp, currency
-      "history:#{timestamp}-#{currency}"
-    end
-
-    def db_point_key point
-      db_key(point.timestamp, point.currency)
     end
   end
 end
