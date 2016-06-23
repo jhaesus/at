@@ -19,7 +19,7 @@ module At
               match_from.each_with_index do |from, from_index|
                 next if (from_index-1==-1)||(from_index==0&&currency==current.currency)
                 partial = match_from.slice(from_index, match_length)
-                if partial.length == match_length && partial == match_to
+                if partial.length == match_length && approximate_match(match_to, partial, BigDecimal("0.005"))
                   next_value = match_from[from_index-1]
                   match_length.times do
                     possibilities << next_value
@@ -42,6 +42,12 @@ module At
             last: rounded
           )
         end
+      end
+
+      def approximate_match from, to, diff
+        from.map { |value| (value - diff)..(value + diff) }.each_with_index.all? { |range, index|
+          range.cover?(to[index])
+        }
       end
     end
   end
