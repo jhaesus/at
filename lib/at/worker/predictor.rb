@@ -11,15 +11,19 @@ module At
         end.to_h
 
         At::Node::Point.as(:to).from(:from, :line).where("to.timestamp = {timestamp}").params(timestamp: timestamp).pluck(:from, :line, :to).map do |previous, line, current|
+          match_to_history = paths[current.currency]
+
+          next unless match_to_history
+
           possibilities = []
-          (5..10).to_a.reverse.each do |match_length|
-            match_to = paths[current.currency].take(match_length)
+          (4..8).to_a.reverse.each do |match_length|
+            match_to = match_to_history.take(match_length)
 
             paths.each do |currency, match_from|
               match_from.each_with_index do |from, from_index|
                 next if (from_index-1==-1)||(from_index==0&&currency==current.currency)
                 partial = match_from.slice(from_index, match_length)
-                if partial.length == match_length && approximate_match(match_to, partial, BigDecimal("0.005"))
+                if partial.length == match_length && approximate_match(match_to, partial, BigDecimal("0.001"))
                   next_value = match_from[from_index-1]
                   match_length.times do
                     possibilities << next_value
@@ -45,7 +49,14 @@ module At
       end
 
       def approximate_match from, to, diff
-        from.map { |value| (value - diff)..(value + diff) }.each_with_index.all? { |range, index|
+        one = BigDecimal("1")
+        from.map { |value|
+          if value > one
+            [value - diff, one].max..(value + diff)
+          else
+            (value - diff)..[value + diff, one].min
+          end
+        }.each_with_index.all? { |range, index|
           range.cover?(to[index])
         }
       end

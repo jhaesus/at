@@ -15,7 +15,7 @@ module At
             result += JSON.parse(previous_result)
           end
           next if result.none?
-          sets << [key, result]
+          sets << [key, minimize(result)]
         end
         database.pipelined do
           sets.each do |args|
@@ -24,6 +24,17 @@ module At
         end
 
         At::Worker::Predictor.perform_in 10.seconds, timestamp if predict
+      end
+
+      def minimize arr, max_length=10
+        (2..[max_length, arr.length].min).inject(arr) { |memo, i| compact(memo, i) }
+      end
+
+      def compact arr, length
+        slices = arr.each_slice(length).each_with_index
+        slices.map { |item, index|
+          slices.to_a.slice(index+1).try(:[], 0) == item ? nil : item
+        }.compact.flatten
       end
 
       def self.db_key currency
