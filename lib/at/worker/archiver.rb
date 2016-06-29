@@ -2,6 +2,7 @@ module At
   module Worker
     class Archiver
       include Worker
+      sidekiq_options queue: :ticker
 
       def perform timestamp, predict=true
         database = At::History
@@ -10,7 +11,7 @@ module At
           key = db_key(current.currency)
           result = []
           rounded = round(line.last)
-          result << rounded.to_f if rounded != BigDecimal("1")
+          result << rounded.to_f if rounded != At.one
           if previous_result = database.get(key)
             result += JSON.parse(previous_result)
           end
@@ -27,7 +28,7 @@ module At
       end
 
       def minimize arr, max_length=10
-        (2..[max_length, arr.length].min).inject(arr) { |memo, i| compact(memo, i) }
+        (2..[max_length, (arr.length.to_f / 2).to_i].min).inject(arr) { |memo, i| compact(memo, i) }
       end
 
       def compact arr, length

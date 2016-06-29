@@ -24,6 +24,6 @@ gem "sidetiq", "0.7.0"
 
 gem "honeybadger", "2.6.0"
 
-group :development, :test do
-  gem "pry", "0.10.3"
-end
+gem "ruby-prof", "0.15.9"
+
+gem "pry", "0.10.3"

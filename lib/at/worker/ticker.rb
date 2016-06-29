@@ -2,6 +2,7 @@ module At
   module Worker
     class Ticker
       include Worker
+      sidekiq_options queue: :critical
       include Sidetiq::Schedulable
       recurrence do
         hourly.minute_of_hour(0, 15, 30, 45)

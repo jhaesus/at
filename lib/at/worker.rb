@@ -6,8 +6,6 @@ module At
     included do
       include Sidekiq::Worker
       sidekiq_options backtrace: true
-
-      # @queue ||= :default
     end
 
     eager_autoload do

@@ -108,6 +108,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
       netrc (~> 0.7)
+    ruby-prof (0.15.9)
     ruby-progressbar (1.8.1)
     rubyzip (1.2.0)
     sidekiq (4.1.2)
@@ -146,6 +147,7 @@ DEPENDENCIES
   pry (= 0.10.3)
   redis (= 3.3.0)
   redis-namespace (= 1.5.2)
+  ruby-prof (= 0.15.9)
   sidekiq (= 4.1.2)
   sidetiq (= 0.7.0)
   sinatra

@@ -2,6 +2,7 @@ module At
   module Worker
     class Predictor
       include Worker
+      sidekiq_options queue: :low
 
       def perform timestamp
         database = At::History
@@ -10,24 +11,37 @@ module At
           [key.split(":")[1], JSON.parse(database.get(key)).map { |amount| BigDecimal(amount.to_s) }]
         end.to_h
 
+        match_length_scope = (5..10).to_a.reverse
+
+        diff = BigDecimal("0.001")
+
         At::Node::Point.as(:to).from(:from, :line).where("to.timestamp = {timestamp}").params(timestamp: timestamp).pluck(:from, :line, :to).map do |previous, line, current|
           match_to_history = paths[current.currency]
 
           next unless match_to_history
 
           possibilities = []
-          (4..8).to_a.reverse.each do |match_length|
-            match_to = match_to_history.take(match_length)
-
-            paths.each do |currency, match_from|
-              match_from.each_with_index do |from, from_index|
-                next if (from_index-1==-1)||(from_index==0&&currency==current.currency)
+          paths.each do |currency, match_from|
+            used_possibilities = []
+            match_from.each_with_index do |from, from_index|
+              guess_index = from_index-1
+              next if guess_index==-1
+              match_length_scope.each do |match_length|
+                next if used_possibilities.include?(guess_index)
                 partial = match_from.slice(from_index, match_length)
-                if partial.length == match_length && approximate_match(match_to, partial, BigDecimal("0.001"))
-                  next_value = match_from[from_index-1]
-                  match_length.times do
-                    possibilities << next_value
-                  end if next_value
+                next unless partial.length == match_length
+                match_to = match_to_history.take(match_length)
+                next unless match_to.length == match_length
+                if approximate_match(match_to, partial, diff)
+                  if next_value = match_from[guess_index]
+                    used_possibilities << guess_index
+
+                    At.logger.info "Prognose: #{current.currency} possibility #{currency}[#{guess_index}] => #{next_value} @ #{match_length}"
+
+                    match_length.times do
+                      possibilities << next_value
+                    end
+                  end
                 end
               end
             end
@@ -35,9 +49,9 @@ module At
 
           next if possibilities.none?
 
-          rounded = (possibilities.sum / possibilities.size).round(3)
+          rounded = round(possibilities.sum / possibilities.size)
 
-          next if rounded == BigDecimal("1")
+          next if rounded == At.one
 
           current.prognose.destroy if current.prognose
 
@@ -49,14 +63,7 @@ module At
       end
 
       def approximate_match from, to, diff
-        one = BigDecimal("1")
-        from.map { |value|
-          if value > one
-            [value - diff, one].max..(value + diff)
-          else
-            (value - diff)..[value + diff, one].min
-          end
-        }.each_with_index.all? { |range, index|
+        from.map { |value| (value - diff)..(value + diff) }.each_with_index.all? { |range, index|
           range.cover?(to[index])
         }
       end

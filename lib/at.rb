@@ -12,6 +12,26 @@ module At
     ENV["AT_ENV"].inquiry
   end
 
+  def self.profile name
+    start = Time.now
+    result = yield
+    logger.debug "  Profile: #{name} took #{((Time.now.to_f - start.to_f)*1000).to_i}ms"
+    result
+  end
+
+  def self.debug
+    RubyProf.start
+    yield
+  ensure
+    result = RubyProf.stop
+    printer = RubyProf::FlatPrinter.new(result)
+    printer.print(STDOUT)
+  end
+
+  mattr_accessor :one do
+    BigDecimal("1")
+  end
+
   mattr_accessor :session do
     Neo4j::Session.open(:server_db)
   end

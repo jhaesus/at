@@ -4,4 +4,4 @@
 :logfile: ./log/sidekiq.log
 :require: ./config/application.rb
 :queues:
-  - default
+  - critical
